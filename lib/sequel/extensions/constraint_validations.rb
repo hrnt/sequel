@@ -214,7 +214,7 @@ module Sequel
     def create_constraint_validations_table
       create_table(constraint_validations_table) do
         String :table, :null=>false
-        String :constraint
+        String :constraint_name
         String :validation_type, :null=>false
         String :column, :null=>false
         String :argument
@@ -253,7 +253,7 @@ module Sequel
         ds = ds.where(:column=>column.to_s)
       end
       if constraint = opts[:constraint]
-        ds = ds.where(:constraint=>constraint.to_s)
+        ds = ds.where(:constraint_name=>constraint.to_s)
       end
       unless table || column || constraint
         raise Error, "must specify :table, :column, or :constraint when dropping constraint validations"
@@ -396,14 +396,14 @@ module Sequel
         end
 
         columns.map do  |column|
-          {:table=>constraint_validations_literal_table(table), :constraint=>(constraint.to_s if constraint), :validation_type=>validation_type.to_s, :column=>column.to_s, :argument=>(arg.to_s if arg), :message=>(message.to_s if message), :allow_nil=>allow_nil}
+          {:table=>constraint_validations_literal_table(table), :constraint_name=>(constraint.to_s if constraint), :validation_type=>validation_type.to_s, :column=>column.to_s, :argument=>(arg.to_s if arg), :message=>(message.to_s if message), :allow_nil=>allow_nil}
         end
       end
 
       ds = from(:sequel_constraint_validations)
       ds.multi_insert(rows.flatten)
       unless drop_rows.empty?
-        ds.where([:table, :constraint]=>drop_rows).delete
+        ds.where([:table, :constraint_name]=>drop_rows).delete
       end
     end
 
