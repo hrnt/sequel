@@ -1720,7 +1720,7 @@ describe "Sequel::Plugins::ConstraintValidations" do
         String :lik
         String :ilik
         String :inc
-        String :uniq
+        String :uniq, :null=>false
         validate(&validate_block)
       end
     end
@@ -1741,7 +1741,7 @@ describe "Sequel::Plugins::ConstraintValidations" do
         String :lik
         String :ilik
         String :inc
-        String :uniq
+        String :uniq, :null=>false
       end
       @db.alter_table(:cv_test) do
         add_column :pre, String
