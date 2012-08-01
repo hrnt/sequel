@@ -218,8 +218,6 @@ module Sequel
         String :argument
         String :message
         TrueClass :allow_nil
-
-        unique [:table, :constraint, :column]
       end
     end
 
