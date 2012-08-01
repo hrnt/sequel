@@ -136,9 +136,6 @@ module Sequel
     # This is the DSL class used for the validate block inside create_table and
     # alter_table.
     class Generator
-      # Alias to process for a nicer API.
-      alias process instance_eval
-
       # Store the schema generator that encloses this validates block.
       def initialize(generator)
         @generator = generator
@@ -166,6 +163,11 @@ module Sequel
       # and remove the related validation metadata.
       def drop(constraint)
         @generator.validation({:type=>:drop, :name=>constraint})
+      end
+
+      # Alias of instance_eval for a nicer API.
+      def process(&block)
+        instance_eval(&block)
       end
     end
 
