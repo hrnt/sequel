@@ -25,13 +25,13 @@ describe "constraint_validations extension" do
 
   it "should allow creating the sequel_constraint_validations table" do
     @db.create_constraint_validations_table
-    @db.sqls.should == ["CREATE TABLE sequel_constraint_validations (table varchar(255) NOT NULL, constraint varchar(255), validation_type varchar(255) NOT NULL, column varchar(255) NOT NULL, argument varchar(255), message varchar(255), allow_nil boolean, UNIQUE (table, constraint, column))"]
+    @db.sqls.should == ["CREATE TABLE sequel_constraint_validations (table varchar(255) NOT NULL, constraint_name varchar(255), validation_type varchar(255) NOT NULL, column varchar(255) NOT NULL, argument varchar(255), message varchar(255), allow_nil boolean)"]
   end
 
   it "should allow creating the sequel_constraint_validations table with a non-default table name" do
     @db.constraint_validations_table = :foo
     @db.create_constraint_validations_table
-    @db.sqls.should == ["CREATE TABLE foo (table varchar(255) NOT NULL, constraint varchar(255), validation_type varchar(255) NOT NULL, column varchar(255) NOT NULL, argument varchar(255), message varchar(255), allow_nil boolean, UNIQUE (table, constraint, column))"]
+    @db.sqls.should == ["CREATE TABLE foo (table varchar(255) NOT NULL, constraint_name varchar(255), validation_type varchar(255) NOT NULL, column varchar(255) NOT NULL, argument varchar(255), message varchar(255), allow_nil boolean)"]
   end
 
   it "should allow dropping the sequel_constraint_validations table" do
@@ -57,7 +57,7 @@ describe "constraint_validations extension" do
 
   it "should allow dropping validations for a given table and constraint" do
     @db.drop_constraint_validations_for(:table=>:foo, :constraint=>:bar)
-    @db.sqls.should == ["DELETE FROM sequel_constraint_validations WHERE ((table = 'foo') AND (constraint = 'bar'))"]
+    @db.sqls.should == ["DELETE FROM sequel_constraint_validations WHERE ((table = 'foo') AND (constraint_name = 'bar'))"]
   end
 
   it "should allow dropping validations for a non-default constraint_validations table" do
@@ -103,7 +103,7 @@ describe "constraint_validations extension" do
   it "should handle :name option when adding validations" do
     @db.create_table(:foo){String :name; validate{presence :name, :name=>'cons'}}
     sqls = @db.sqls
-    parse_insert(sqls.slice!(1)).should == {:validation_type=>"presence", :column=>"name", :table=>"foo", :constraint=>'cons'}
+    parse_insert(sqls.slice!(1)).should == {:validation_type=>"presence", :column=>"name", :table=>"foo", :constraint_name=>'cons'}
     sqls.should == ["BEGIN", "COMMIT", "CREATE TABLE foo (name varchar(255), CONSTRAINT cons CHECK ((name IS NOT NULL) AND (trim(name) != '')))"]
   end
 
@@ -264,7 +264,7 @@ describe "constraint_validations extension" do
 
   it "should drop constraints and validations when dropping a constraint validation" do
     @db.alter_table(:foo){String :name; validate{drop :bar}}
-    @db.sqls.should == ["DELETE FROM sequel_constraint_validations WHERE ((table, constraint) IN (('foo', 'bar')))", "ALTER TABLE foo DROP CONSTRAINT bar"]
+    @db.sqls.should == ["DELETE FROM sequel_constraint_validations WHERE ((table, constraint_name) IN (('foo', 'bar')))", "ALTER TABLE foo DROP CONSTRAINT bar"]
   end
 
   it "should raise an error if attempting to validate inclusion with a range of non-integers" do
