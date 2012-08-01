@@ -128,6 +128,15 @@ describe "constraint_validations extension" do
     sqls.should == ["parse schema for foo", "BEGIN", "COMMIT", "ALTER TABLE foo ADD CHECK (name IS NOT NULL)"]
   end
 
+  it "should handle presence validation on Oracle with IS NOT NULL instead of != ''" do
+    @db = Sequel.mock(:host=>'oracle')
+    @db.extension(:constraint_validations)
+    @db.create_table(:foo){String :name; validate{presence :name}}
+    sqls = @db.sqls
+    parse_insert(sqls.slice!(1)).should == {:validation_type=>"presence", :column=>"name", :table=>"foo"}
+    sqls.should == ["BEGIN", "COMMIT", "CREATE TABLE foo (name varchar(255), CHECK ((name IS NOT NULL) AND (trim(name) IS NOT NULL)))"]
+  end
+
   it "should assume column is not a String if it can't determine the type" do
     @db.create_table(:foo){Integer :name; validate{presence :bar}}
     sqls = @db.sqls
