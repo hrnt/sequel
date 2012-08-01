@@ -265,16 +265,6 @@ module Sequel
 
     # Modify the default create_table generator to include
     # the constraint validation methods.
-    def create_table_generator(&block)
-      super do
-        extend CreateTableGeneratorMethods
-        @validations = []
-        instance_eval(&block) if block
-      end
-    end
-
-    # Modify the default create_table generator to include
-    # the constraint validation methods.
     def alter_table_generator(&block)
       super do
         extend AlterTableGeneratorMethods
@@ -298,6 +288,16 @@ module Sequel
       end
     end
 
+    # The value of a blank string.  An empty string by default, but nil
+    # on Oracle as Oracle treats the empty string as NULL.
+    def blank_string_value
+      if database_type == :oracle
+        nil
+      else
+        ''
+      end
+    end
+
     # Return an unquoted literal form of the table name.
     # This allows the code to handle schema qualified tables,
     # without quoting all table names.
@@ -316,6 +316,16 @@ module Sequel
       super
     end
 
+    # Modify the default create_table generator to include
+    # the constraint validation methods.
+    def create_table_generator(&block)
+      super do
+        extend CreateTableGeneratorMethods
+        @validations = []
+        instance_eval(&block) if block
+      end
+    end
+
     # For the given table, generator, and validations, add constraints
     # to the generator for each of the validations, as well as adding
     # validation metadata to the constraint validations table.
@@ -326,7 +336,7 @@ module Sequel
 
         case validation_type
         when :presence
-          string_check = columns.select{|c| generator_string_column?(generator, table, c)}.map{|c| [Sequel.trim(c), '']}
+          string_check = columns.select{|c| generator_string_column?(generator, table, c)}.map{|c| [Sequel.trim(c), blank_string_value]}
           generator_add_constraint_from_validation(generator, val, (Sequel.negate(string_check) unless string_check.empty?))
         when :exact_length
           generator_add_constraint_from_validation(generator, val, Sequel.&(*columns.map{|c| {Sequel.char_length(c) => arg}}))
